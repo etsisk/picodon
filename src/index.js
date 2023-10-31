@@ -4,13 +4,28 @@
  */
 
 /**
- * @param {Map<string, (...args: unknown[]) => unknown>} cfg - Map of config for parsing
+ * @param {Map<string | RegExp, (...args: unknown[]) => unknown>} cfg - Map of config for parsing
  * @param {(chunks: ProcessedChunk[]) => unknown} [sum=(n) => n] - Summarizing function
  * @returns {(str: string) => ProcessedChunk[] | unknown}
  */
 function parse(cfg, sum = (n) => n) {
   const cfgKeys = [...cfg.keys()];
   return function process(str) {
+    const regexKeys = cfgKeys.filter((key) => {
+      if (key.test !== undefined) {
+        return true;
+      }
+      return false;
+    });
+
+    for (let regex of regexKeys) {
+      const match = str.match(regex);
+      if (match) {
+        const regexFunc = cfg.get(regex);
+        return process(regexFunc(match[0], str, cfg));
+      }
+    }
+
     let chunks = chunkStr(cfgKeys, str);
 
     for (let [symbol, func] of cfg) {
@@ -22,14 +37,15 @@ function parse(cfg, sum = (n) => n) {
 }
 
 /**
- * @param {string[]} cfgKeys - Array of config key symbols
+ * @param {(string|RegExp)[]} cfgKeys - Array of config key symbols
  * @param {string} str - String to parse
  * @returns {string[]}
  */
 function chunkStr(cfgKeys, str) {
-  const keys = cfgKeys.map((k) => escapeRegExp(k)).join("|");
+  const strKeys = cfgKeys.filter(key => typeof key === 'string');
+  const keys = strKeys.map((k) => escapeRegExp(k)).join("|");
   const regex = new RegExp(`(${keys})`, "g");
-  return str.split(regex).map((chunk) => chunk.trim());
+  return str?.split(regex)?.map((chunk) => chunk.trim()) ?? [];
 }
 
 /**
