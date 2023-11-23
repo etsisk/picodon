@@ -1,3 +1,8 @@
+interface Cfg {
+  modifiers: Map<RegExp, (match: string, str: string, cfg: Cfg) => string>;
+  tokens: Map<string | RegExp, (...args: unknown[]) => unknown>;
+}
+
 type Chunk = ProcessedChunk | string;
 
 interface ProcessedChunk {
@@ -10,6 +15,7 @@ interface ProcessedChunk {
 }
 
 export {
+  Cfg,
   Chunk,
   ProcessedChunk,
 }
