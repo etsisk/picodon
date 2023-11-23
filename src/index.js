@@ -183,8 +183,10 @@ function isProcessedChunk(chunk) {
   return typeof chunk === "object" && Object.hasOwn(chunk, "result");
 }
 
-// QUESTION: Should this be part of the library???
-// QUESTION: Expose `isProcessedChunk` instead???
+/**
+ * @param {ProcessedChunk[]} chunks - An array of processed chunks
+ * @returns {ProcessedChunk[] | string}
+ */
 function getResultFromOnlyChunk(chunks) {
   if (chunks.length === 1 && isProcessedChunk(chunks[0])) {
     return chunks[0].result;
@@ -192,6 +194,5 @@ function getResultFromOnlyChunk(chunks) {
   return chunks;
 }
 
-// TODO: Change export name from 'pare' to something else
-export { getResultFromOnlyChunk as pare, parse };
+export { getResultFromOnlyChunk as resolver, parse };
 

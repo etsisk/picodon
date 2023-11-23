@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { pare, parse } from "./index";
+import { parse, resolver } from "./index";
 
 describe("parse", () => {
   it('parses "1 > 0"', () => {
@@ -11,7 +11,7 @@ describe("parse", () => {
       modifiers: new Map(),
       tokens: new Map([[">", gt]]),
     };
-    expect(parse(cfg, pare)("1 > 0")).toBe(true);
+    expect(parse(cfg, resolver)("1 > 0")).toBe(true);
   });
 
   it('parses "2 > 1 > 0"', () => {
@@ -41,7 +41,7 @@ describe("parse", () => {
             : [frag1, ">", frag2].join(""),
       ]]),
     };
-    expect(parse(cfg, pare)("1 > 0")).toEqual("Now this I can understand!");
+    expect(parse(cfg, resolver)("1 > 0")).toEqual("Now this I can understand!");
   });
 
   it('parses "2 > 1 && 1 > 0"', () => {
@@ -62,7 +62,7 @@ describe("parse", () => {
           const result = parse({ modifiers: new Map(), tokens: cfg.tokens })(
             str,
           );
-          return fullStr.replace(str, pare(result));
+          return fullStr.replace(str, resolver(result));
         }],
       ]),
       tokens: new Map([
@@ -70,7 +70,7 @@ describe("parse", () => {
         ["<", lt],
       ]),
     };
-    expect(parse(cfg, pare)("3 0 |0 1")).toEqual(false);
+    expect(parse(cfg, resolver)("3 0 |0 1")).toEqual(false);
   });
 
   it('parses "4 + 2 * (1 + 2)"', () => {
@@ -81,7 +81,7 @@ describe("parse", () => {
         ["+", add],
       ]),
     };
-    expect(parse(cfg, pare)("4 + 2 * (1 + 2)")).toEqual(10);
+    expect(parse(cfg, resolver)("4 + 2 * (1 + 2)")).toEqual(10);
   });
 
   it('parses "(4 + 2) * (1 + 2)"', () => {
@@ -94,7 +94,7 @@ describe("parse", () => {
         ["+", add],
       ]),
     };
-    expect(parse(cfg, pare)("(4 + 2) * (1 + 2)")).toEqual(18);
+    expect(parse(cfg, resolver)("(4 + 2) * (1 + 2)")).toEqual(18);
   });
 
   it('parses "8 * (3 + (1 - 3))', () => {
@@ -108,7 +108,7 @@ describe("parse", () => {
         ["-", subtract],
       ]),
     };
-    expect(parse(cfg, pare)("8 * (3 + (1 - 3))")).toEqual(8);
+    expect(parse(cfg, resolver)("8 * (3 + (1 - 3))")).toEqual(8);
   });
 
   it('parses "-1 - -1"', () => {
@@ -116,7 +116,7 @@ describe("parse", () => {
       modifiers: new Map(),
       tokens: new Map([[/-(?!(\.|[0-9]))/, subtract]]),
     };
-    expect(parse(cfg, pare)("-1 - -1")).toEqual(0);
+    expect(parse(cfg, resolver)("-1 - -1")).toEqual(0);
   });
 
   it('parses "3 + 1 = (7 - 11) * -1"', () => {
@@ -131,7 +131,7 @@ describe("parse", () => {
         ["=", equal],
       ]),
     };
-    expect(parse(cfg, pare)("3 + 1 = (7 - 11) * -1")).toEqual(true);
+    expect(parse(cfg, resolver)("3 + 1 = (7 - 11) * -1")).toEqual(true);
   });
 
   it('parses "1 > 0 plus all of this text too"', () => {
@@ -139,12 +139,12 @@ describe("parse", () => {
       modifiers: new Map(),
       tokens: new Map([[">", (frag1, frag2) => +frag1 > parseInt(frag2)]]),
     };
-    expect(parse(cfg, pare)("1 > 0 plus all of this text too")).toEqual(true);
+    expect(parse(cfg, resolver)("1 > 0 plus all of this text too")).toEqual(true);
   });
 
   it("parses invalid input", () => {
     const cfg = { modifiers: new Map(), tokens: new Map([[">", gt]]) };
-    expect(parse(cfg, pare)(null)).toEqual([]);
+    expect(parse(cfg, resolver)(null)).toEqual([]);
   });
 
   it('parses at the boundaries with " + 5 "', () => {
@@ -218,7 +218,7 @@ function equal(frag1, frag2) {
  */
 function processStrInsideParens(str, fullStr, cfg) {
   const result = parse(cfg)(str.slice(1, -1));
-  return fullStr.replace(str, pare(result));
+  return fullStr.replace(str, resolver(result));
 }
 
 /**
