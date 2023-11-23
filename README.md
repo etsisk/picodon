@@ -4,7 +4,7 @@ A lightweight, domain-agnostic string parsing library.
 
 ## Usage
 ```javascript
-import { parse } from 'str-parse';
+import { parse, resolver } from 'str-parse';
 
 const config = new Map([
   ['<', (a, b) => parseInt(a) < parseInt(b)],
@@ -17,13 +17,6 @@ console.log(testA); // false
 
 const testB = parser('1 < 4');
 console.log(testB); // true
-
-function resolver(results) {
-  if (results.length === 1 && Object.hasOwn(results[0], 'result')) {
-    return results[0].result;
-  }
-  return results;
-}
 ```
 
 
