@@ -7,32 +7,22 @@ import { parse, resolver } from "./index";
 
 describe("parse", () => {
   it('parses "1 > 0"', () => {
-    const cfg = {
-      modifiers: new Map(),
-      tokens: new Map([[">", gt]]),
-    };
+    const cfg = { tokens: new Map([[">", gt]]) };
     expect(parse(cfg, resolver)("1 > 0")).toBe(true);
   });
 
   it('parses "2 > 1 > 0"', () => {
-    const cfg = {
-      modifiers: new Map(),
-      tokens: new Map([[">", gt]]),
-    };
+    const cfg = { tokens: new Map([[">", gt]]) };
     expect(parse(cfg, allTrue)("2 > 1 > 0")).toBe(true);
   });
 
   it('parses "2 > 0 > 1"', () => {
-    const cfg = {
-      modifiers: new Map(),
-      tokens: new Map([[">", gt]]),
-    };
+    const cfg = { tokens: new Map([[">", gt]]) };
     expect(parse(cfg, allTrue)("2 > 0 > 1")).toBe(false);
   });
 
   it('returns "Now this I can understand!" when parsing "1 > 0"', () => {
     const cfg = {
-      modifiers: new Map(),
       tokens: new Map([[
         ">",
         (frag1, frag2) =>
@@ -46,7 +36,6 @@ describe("parse", () => {
 
   it('parses "2 > 1 && 1 > 0"', () => {
     const cfg = {
-      modifiers: new Map(),
       tokens: new Map([
         [">", gt],
         ["&&", andOp],
@@ -59,9 +48,7 @@ describe("parse", () => {
     const cfg = {
       modifiers: new Map([
         [/\d+\s?\|\s?\d+/, (str, fullStr, cfg) => {
-          const result = parse({ modifiers: new Map(), tokens: cfg.tokens })(
-            str,
-          );
+          const result = parse({ tokens: cfg.tokens })(str);
           return fullStr.replace(str, resolver(result));
         }],
       ]),
@@ -113,7 +100,6 @@ describe("parse", () => {
 
   it('parses "-1 - -1"', () => {
     const cfg = {
-      modifiers: new Map(),
       tokens: new Map([[/-(?!(\.|[0-9]))/, subtract]]),
     };
     expect(parse(cfg, resolver)("-1 - -1")).toEqual(0);
@@ -136,19 +122,18 @@ describe("parse", () => {
 
   it('parses "1 > 0 plus all of this text too"', () => {
     const cfg = {
-      modifiers: new Map(),
       tokens: new Map([[">", (frag1, frag2) => +frag1 > parseInt(frag2)]]),
     };
     expect(parse(cfg, resolver)("1 > 0 plus all of this text too")).toEqual(true);
   });
 
   it("parses invalid input", () => {
-    const cfg = { modifiers: new Map(), tokens: new Map([[">", gt]]) };
+    const cfg = { tokens: new Map([[">", gt]]) };
     expect(parse(cfg, resolver)(null)).toEqual([]);
   });
 
   it('parses at the boundaries with " + 5 "', () => {
-    const cfg = { modifiers: new Map(), tokens: new Map([["", () => {}]]) };
+    const cfg = { tokens: new Map([["", () => {}]]) };
     expect(parse(cfg, allUndefined)(" + 5 ")).toEqual(true);
   });
 

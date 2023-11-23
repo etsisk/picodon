@@ -10,8 +10,9 @@
  * @returns {(str: string) => ProcessedChunk[] | unknown}
  */
 function parse(cfg, sum = (n) => n) {
-  const modifiers = [...cfg.modifiers?.keys()];
-  const tokens = [...cfg.tokens.keys()];
+  const modifiers = [...cfg.modifiers?.keys() ?? []];
+  // TODO: Come up with a better name for tokens; matchers?
+  const tokens = [...cfg.tokens?.keys() ?? []];
 
   return function process(str) {
     // QUESTION: Do we want to restrict modifiers to be RegExp[] ?
@@ -71,7 +72,7 @@ function escapeRegExp(str) {
  */
 function processChunked(chunked, matcher, matchers, map) {
   const { indicesToPrune, unPrunedChunks } = chunked.reduce((result, chunk, i) => {
-    // TODO: Check if type of chunk is ProcessedChunk
+    // CONSIDER: Check if type of chunk is ProcessedChunk
     if ((typeof matcher === 'string' && chunk === matcher) || (typeof matcher !== 'string' && typeof chunk === 'string' && chunk.match(matcher))) {
       const fn = map.get(matcher);
       const siblingChunks = getSiblingChunks(chunked, i);
@@ -83,12 +84,13 @@ function processChunked(chunked, matcher, matchers, map) {
             ...Object.fromEntries(siblingChunks),
             [i]: matcher,
           },
-          func: fn,
+          fn,
+          matcher,
           result: fn?.apply(
             null,
+            // CONSIDER: Include matcher as a third argument
             Array.from(siblingChunks.values()).map((chunk) => getParam(chunk)),
           ),
-          symbol: matcher,
         }]),
       }
     }
