@@ -6,13 +6,13 @@
 
 /**
  * @param {Cfg} cfg - Map of config for parsing
- * @param {(chunks: ProcessedChunk[]) => unknown} [sum=(n) => n] - Summarizing function
+ * @param {(chunks: Chunk[]) => unknown} [resolver=(n) => n] - Summarizing function
  * @returns {(str: string) => ProcessedChunk[] | unknown}
  */
-function parse(cfg, sum = (n) => n) {
+function parse(cfg, resolver = (n) => n) {
   const modifiers = [...cfg.modifiers?.keys() ?? []];
   // TODO: Come up with a better name for tokens; matchers?
-  const tokens = [...cfg.tokens?.keys() ?? []];
+  const tokens = [...cfg.rules?.keys() ?? []];
 
   return function process(str) {
     // QUESTION: Do we want to restrict modifiers to be RegExp[] ?
@@ -29,8 +29,8 @@ function parse(cfg, sum = (n) => n) {
     }
 
     const chunked = chunkStr(tokens, str);
-    const chunks = processChunked(chunked, tokens[0], tokens, cfg.tokens);
-    return sum(chunks);
+    const chunks = processChunked(chunked, tokens[0], tokens, cfg.rules);
+    return resolver(chunks);
   }
 }
 
@@ -68,7 +68,7 @@ function escapeRegExp(str) {
  * @param {string | RegExp} matcher - The matcher to test against
  * @param {(string | RegExp)[]} matchers - The full list of matchers
  * @param {Cfg["tokens"]} map - The full list of matchers with their values
- * @returns {ProcessedChunk[]}
+ * @returns {Chunk[]}
  */
 function processChunked(chunked, matcher, matchers, map) {
   const { indicesToPrune, unPrunedChunks } = chunked.reduce((result, chunk, i) => {
@@ -127,7 +127,7 @@ function getNextMatcher(currentMatcher, allMatchers) {
 /**
  * @param {Chunk[]} chunks - An array of processed and unprocessed chunks
  * @param {{[key: string]: boolean}} indices - An array of indices to prune
- * @returns {ProcessedChunk[]}
+ * @returns {Chunk[]}
  */
 function pruneChunks(chunks, indices) {
   const pruneableIndices = Object.keys(indices).map((i) => parseInt(i)).flatMap(i => {
@@ -179,22 +179,23 @@ function getParam(chunk) {
 
 /**
  * @param {Chunk} chunk - Processed or unprocessed chunk
- * @returns {boolean}
+ * @returns {chunk is ProcessedChunk}
  */
 function isProcessedChunk(chunk) {
   return typeof chunk === "object" && Object.hasOwn(chunk, "result");
 }
 
 /**
- * @param {ProcessedChunk[]} chunks - An array of processed chunks
- * @returns {ProcessedChunk[] | string}
+ * @param {Chunk[]} chunks - An array of processed chunks
+ * @returns {ProcessedChunk[] | string | unknown}
  */
 function getResultFromOnlyChunk(chunks) {
-  if (chunks.length === 1 && isProcessedChunk(chunks[0])) {
-    return chunks[0].result;
+  if (chunks.length === 1) {
+    return getParam(chunks[0]);
   }
   return chunks;
 }
 
+// CONSIDER: Export common regular expressions (e.g. matching parens) as helpers
 export { getResultFromOnlyChunk as resolver, parse };
 

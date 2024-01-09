@@ -4,18 +4,20 @@ interface Cfg {
 }
 
 type Chunk = ProcessedChunk | string;
+type Matcher = RegExp | string;
 
 interface ProcessedChunk {
   chunks: {
-    [key: number]: Chunk,
+    [key: number]: Chunk | Matcher,
   },
-  func: () => unknown,
+  fn: (...args: unknown[]) => unknown,
+  matcher: Matcher,
   result: unknown,
-  symbol: string,
 }
 
 export {
   Cfg,
   Chunk,
+  Matcher,
   ProcessedChunk,
 }
