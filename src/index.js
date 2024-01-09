@@ -5,14 +5,13 @@
  */
 
 /**
- * @param {Cfg} cfg - Map of config for parsing
+ * @param {Cfg} cfg - Config object
  * @param {(chunks: Chunk[]) => unknown} [resolver=(n) => n] - Summarizing function
  * @returns {(str: string) => ProcessedChunk[] | unknown}
  */
 function parse(cfg, resolver = (n) => n) {
   const modifiers = [...cfg.modifiers?.keys() ?? []];
-  // TODO: Come up with a better name for tokens; matchers?
-  const tokens = [...cfg.rules?.keys() ?? []];
+  const lexers = [...cfg.rules?.keys() ?? []];
 
   return function process(str) {
     // QUESTION: Do we want to restrict modifiers to be RegExp[] ?
@@ -28,19 +27,19 @@ function parse(cfg, resolver = (n) => n) {
       }
     }
 
-    const chunked = chunkStr(tokens, str);
-    const chunks = processChunked(chunked, tokens[0], tokens, cfg.rules);
+    const chunked = chunkStr(lexers, str);
+    const chunks = processChunked(chunked, lexers[0], lexers, cfg.rules);
     return resolver(chunks);
   }
 }
 
 /**
- * @param {(string|RegExp)[]} tokens - Array of matchers
+ * @param {(string|RegExp)[]} lexers - Array of lexers
  * @param {string} str - String to parse
  * @returns {string[]}
  */
-function chunkStr(tokens, str) {
-  const keys = tokens.map((k) => {
+function chunkStr(lexers, str) {
+  const keys = lexers.map((k) => {
     if (typeof k === 'string') {
       return escapeRegExp(k);
     }
@@ -65,16 +64,16 @@ function escapeRegExp(str) {
 
 /**
  * @param {Chunk[]} chunked - An array of processed and unprocessed chunks
- * @param {string | RegExp} matcher - The matcher to test against
- * @param {(string | RegExp)[]} matchers - The full list of matchers
- * @param {Cfg["tokens"]} map - The full list of matchers with their values
+ * @param {string | RegExp} lexer - The lexer to test against
+ * @param {(string | RegExp)[]} lexers - The full list of lexers
+ * @param {Cfg["rules"]} rules - The full list of rules
  * @returns {Chunk[]}
  */
-function processChunked(chunked, matcher, matchers, map) {
+function processChunked(chunked, lexer, lexers, rules) {
   const { indicesToPrune, unPrunedChunks } = chunked.reduce((result, chunk, i) => {
     // CONSIDER: Check if type of chunk is ProcessedChunk
-    if ((typeof matcher === 'string' && chunk === matcher) || (typeof matcher !== 'string' && typeof chunk === 'string' && chunk.match(matcher))) {
-      const fn = map.get(matcher);
+    if ((typeof lexer === 'string' && chunk === lexer) || (typeof lexer !== 'string' && typeof chunk === 'string' && chunk.match(lexer))) {
+      const fn = rules.get(lexer);
       const siblingChunks = getSiblingChunks(chunked, i);
       return {
         indicesToPrune: { ...result.indicesToPrune, [i - 1]: true, [i + 1]: true },
@@ -82,10 +81,10 @@ function processChunked(chunked, matcher, matchers, map) {
         unPrunedChunks: result.unPrunedChunks.concat([{
           chunks: {
             ...Object.fromEntries(siblingChunks),
-            [i]: matcher,
+            [i]: lexer,
           },
           fn,
-          matcher,
+          lexer,
           result: fn?.apply(
             null,
             // CONSIDER: Include matcher as a third argument
@@ -102,24 +101,24 @@ function processChunked(chunked, matcher, matchers, map) {
   }, { unPrunedChunks: [], indicesToPrune: {} });
 
   const prunedChunks = pruneChunks(unPrunedChunks, indicesToPrune);
-  const nextMatcher = getNextMatcher(matcher, matchers);
+  const nextLexer = getNextLexer(lexer, lexers);
 
-  if (nextMatcher) {
-    return processChunked(prunedChunks, nextMatcher, matchers, map);
+  if (nextLexer) {
+    return processChunked(prunedChunks, nextLexer, lexers, rules);
   }
   return prunedChunks;
 }
 
 /**
- * @param {string | RegExp} currentMatcher - The current matcher
- * @param {(string | RegExp)[]} allMatchers - The full list of matchers
+ * @param {string | RegExp} currentLexer - The current lexer
+ * @param {(string | RegExp)[]} allLexers - The full list of lexers
  * @returns {string | RegExp | undefined}
  */
-function getNextMatcher(currentMatcher, allMatchers) {
-  const currentIndex = allMatchers.findIndex(m => m === currentMatcher);
-  const nextMatcher = allMatchers[currentIndex + 1];
-  if (nextMatcher) {
-    return nextMatcher;
+function getNextLexer(currentLexer, allLexers) {
+  const currentIndex = allLexers.findIndex(m => m === currentLexer);
+  const nextLexer = allLexers[currentIndex + 1];
+  if (nextLexer) {
+    return nextLexer;
   }
   return undefined;
 }
