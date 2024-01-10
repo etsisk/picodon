@@ -1,5 +1,7 @@
 /**
  * @typedef {import("../index").Cfg} Cfg
+ * @typedef {import("../index").Lexer} Lexer
+ * @typedef {import("../index").Parser} Parser
  * @typedef {import("../index").ProcessedChunk} ProcessedChunk
  * @typedef {import("../index").Chunk} Chunk
  */
@@ -20,7 +22,7 @@ function parse(cfg, resolver = (n) => n) {
     for (let regex of regexs) {
       const match = str.match(regex);
       if (match) {
-        const regexFn = cfg.modifiers.get(regex);
+        const regexFn = cfg.modifiers?.get(regex);
         if (regexFn) {
           return process(regexFn(match[0], str, cfg));
         }
@@ -28,13 +30,15 @@ function parse(cfg, resolver = (n) => n) {
     }
 
     const chunked = chunkStr(lexers, str);
-    const chunks = processChunked(chunked, lexers[0], lexers, cfg.rules);
+    const rulesIter = cfg.rules.entries();
+    const rule = rulesIter.next();
+    const chunks = processChunked(chunked, rule.value, rulesIter);
     return resolver(chunks);
   }
 }
 
 /**
- * @param {(string|RegExp)[]} lexers - Array of lexers
+ * @param {Lexer[]} lexers - Array of lexers
  * @param {string} str - String to parse
  * @returns {string[]}
  */
@@ -64,16 +68,16 @@ function escapeRegExp(str) {
 
 /**
  * @param {Chunk[]} chunked - An array of processed and unprocessed chunks
- * @param {string | RegExp} lexer - The lexer to test against
- * @param {(string | RegExp)[]} lexers - The full list of lexers
- * @param {Cfg["rules"]} rules - The full list of rules
+ * @param {[Lexer, Parser]} rule - The lexer to test against
+ * @template {[Lexer, Parser]} T
+ * @param {IterableIterator<T>} rulesIter - Rules entries
  * @returns {Chunk[]}
  */
-function processChunked(chunked, lexer, lexers, rules) {
+function processChunked(chunked, rule, rulesIter) {
+  const [lexer, fn] = rule;
   const { indicesToPrune, unPrunedChunks } = chunked.reduce((result, chunk, i) => {
     // CONSIDER: Check if type of chunk is ProcessedChunk
     if ((typeof lexer === 'string' && chunk === lexer) || (typeof lexer !== 'string' && typeof chunk === 'string' && chunk.match(lexer))) {
-      const fn = rules.get(lexer);
       const siblingChunks = getSiblingChunks(chunked, i);
       return {
         indicesToPrune: { ...result.indicesToPrune, [i - 1]: true, [i + 1]: true },
@@ -87,7 +91,7 @@ function processChunked(chunked, lexer, lexers, rules) {
           lexer,
           result: fn?.apply(
             null,
-            // CONSIDER: Include matcher as a third argument
+            // CONSIDER: Include lexer as a third argument
             Array.from(siblingChunks.values()).map((chunk) => getParam(chunk)),
           ),
         }]),
@@ -101,26 +105,12 @@ function processChunked(chunked, lexer, lexers, rules) {
   }, { unPrunedChunks: [], indicesToPrune: {} });
 
   const prunedChunks = pruneChunks(unPrunedChunks, indicesToPrune);
-  const nextLexer = getNextLexer(lexer, lexers);
+  const nextRule = rulesIter.next();
 
-  if (nextLexer) {
-    return processChunked(prunedChunks, nextLexer, lexers, rules);
+  if (nextRule.done === false) {
+    return processChunked(prunedChunks, nextRule.value, rulesIter);
   }
   return prunedChunks;
-}
-
-/**
- * @param {string | RegExp} currentLexer - The current lexer
- * @param {(string | RegExp)[]} allLexers - The full list of lexers
- * @returns {string | RegExp | undefined}
- */
-function getNextLexer(currentLexer, allLexers) {
-  const currentIndex = allLexers.findIndex(m => m === currentLexer);
-  const nextLexer = allLexers[currentIndex + 1];
-  if (nextLexer) {
-    return nextLexer;
-  }
-  return undefined;
 }
 
 /**

@@ -1,5 +1,8 @@
 /**
+ * @typedef {import("../index").Cfg} Cfg
  * @typedef {import("../index").Chunk} Chunk
+ * @typedef {import("../index").Lexer} Lexer
+ * @typedef {import("../index").Parser} Parser
  */
 
 import { describe, expect, it } from "vitest";
@@ -25,6 +28,7 @@ describe("parse", () => {
     const cfg = {
       rules: new Map([[
         ">",
+        /** @param {string} frag1 @param {string} frag2 */
         (frag1, frag2) =>
           +frag1 > +frag2
             ? "Now this I can understand!"
@@ -47,13 +51,13 @@ describe("parse", () => {
   it('parses "3 0 |0 1"', () => {
     const cfg = {
       modifiers: new Map([
-        [/\d+\s?\|\s?\d+/, (str, fullStr, cfg) => {
-          const result = parse({ rules: cfg.rules })(str);
-          return fullStr.replace(str, resolver(result));
+        [/\d+\s?\|\s?\d+/, /** @param {string} str @param {string} fullStr @param {Cfg} cfg */(str, fullStr, cfg) => {
+          const result = parse({ rules: cfg.rules }, resolver)(str);
+          return fullStr.replace(str, result);
         }],
       ]),
       rules: new Map([
-        ["|", (frag1, frag2) => +frag1 ^ +frag2 ? ">" : "<"],
+        ["|", /** @param {string} frag1 @param {string} frag2 */(frag1, frag2) => +frag1 ^ +frag2 ? ">" : "<"],
         ["<", lt],
       ]),
     };
@@ -122,7 +126,7 @@ describe("parse", () => {
 
   it('parses "1 > 0 plus all of this text too"', () => {
     const cfg = {
-      rules: new Map([[">", (frag1, frag2) => +frag1 > parseInt(frag2)]]),
+      rules: new Map([[">", /** @param {string} frag1 @param {string} frag2 */(frag1, frag2) => +frag1 > parseInt(frag2)]]),
     };
     expect(parse(cfg, resolver)("1 > 0 plus all of this text too")).toEqual(true);
   });
@@ -203,7 +207,7 @@ function equal(frag1, frag2) {
 /**
  * @param {string} str - String value inside of parens
  * @param {string} fullStr - Full string value
- * @param {Map<string | RegExp, (...args: unknown[]) => unknown>} cfg - Original config
+ * @param {Cfg} cfg - Original config
  * @returns {string}
  */
 function processStrInsideParens(str, fullStr, cfg) {

@@ -1,16 +1,17 @@
 interface Cfg {
-  modifiers: Map<RegExp, (match: string, str: string, cfg: Cfg) => string>;
-  rules: Map<string | RegExp, (...args: unknown[]) => unknown>;
+  modifiers?: Map<RegExp, (match: string, str: string, cfg: Cfg) => string>;
+  rules: Map<string | RegExp, Parser>;
 }
 
 type Chunk = ProcessedChunk | string;
 type Lexer = RegExp | string;
+type Parser = (...args: never) => unknown;
 
 interface ProcessedChunk {
   chunks: {
     [key: number]: Chunk | Lexer,
   },
-  fn: (...args: unknown[]) => unknown,
+  fn: Parser,
   lexer: Lexer,
   result: unknown,
 }
@@ -18,6 +19,7 @@ interface ProcessedChunk {
 export {
   Cfg,
   Chunk,
-  Matcher,
+  Lexer,
+  Parser,
   ProcessedChunk,
 }
