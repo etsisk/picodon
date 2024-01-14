@@ -53,7 +53,7 @@ describe("parse", () => {
       modifiers: new Map([
         [/\d+\s?\|\s?\d+/, /** @param {string} str @param {string} fullStr @param {Cfg} cfg */(str, fullStr, cfg) => {
           const result = parse({ rules: cfg.rules }, resolver)(str);
-          return fullStr.replace(str, result);
+          return fullStr.replace(str, `${result}`);
         }],
       ]),
       rules: new Map([
@@ -211,8 +211,8 @@ function equal(frag1, frag2) {
  * @returns {string}
  */
 function processStrInsideParens(str, fullStr, cfg) {
-  const result = parse(cfg)(str.slice(1, -1));
-  return fullStr.replace(str, resolver(result));
+  const result = parse(cfg, resolver)(str.slice(1, -1));
+  return fullStr.replace(str, `${result}`);
 }
 
 /**
