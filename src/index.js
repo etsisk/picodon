@@ -30,9 +30,7 @@ function parse(cfg, resolver = (n) => n) {
     }
 
     const chunked = chunkStr(lexers, str);
-    const rulesIter = cfg.rules.entries();
-    const rule = rulesIter.next();
-    const chunks = processChunked(chunked, rule.value, rulesIter);
+    const chunks = processChunked(chunked, cfg.rules.entries());
     return resolver(chunks);
   }
 }
@@ -68,13 +66,23 @@ function escapeRegExp(str) {
 
 /**
  * @param {Chunk[]} chunked - An array of processed and unprocessed chunks
- * @param {[Lexer, Parser]} rule - The lexer to test against
  * @template {[Lexer, Parser]} T
  * @param {IterableIterator<T>} rulesIter - Rules entries
  * @returns {Chunk[]}
  */
-function processChunked(chunked, rule, rulesIter) {
-  const [lexer, fn] = rule;
+function processChunked(chunked, rulesIter) {
+  const nextRule = rulesIter.next();
+
+  if (nextRule.done) {
+    return chunked;
+  }
+
+  /** @satisfies {[Lexer, Parser]} */
+  const rule = nextRule.value;
+  /** @satisfies {Lexer} */
+  const lexer = nextRule.value[0];
+  /** @type {Parser} */
+  const fn = nextRule.value[1];
   const { indicesToPrune, unPrunedChunks } = chunked.reduce((result, chunk, i) => {
     // CONSIDER: Check if type of chunk is ProcessedChunk
     if ((typeof lexer === 'string' && chunk === lexer) || (typeof lexer !== 'string' && typeof chunk === 'string' && chunk.match(lexer))) {
@@ -105,12 +113,7 @@ function processChunked(chunked, rule, rulesIter) {
   }, { unPrunedChunks: [], indicesToPrune: {} });
 
   const prunedChunks = pruneChunks(unPrunedChunks, indicesToPrune);
-  const nextRule = rulesIter.next();
-
-  if (nextRule.done === false) {
-    return processChunked(prunedChunks, nextRule.value, rulesIter);
-  }
-  return prunedChunks;
+  return processChunked(prunedChunks,  rulesIter);
 }
 
 /**
