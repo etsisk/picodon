@@ -28,7 +28,7 @@ describe("parse", () => {
     const cfg = {
       rules: new Map([[
         ">",
-        /** @param {string} frag1 @param {string} frag2 */
+        /** @param {string} frag1 @param {string} frag2 @returns {string} */
         (frag1, frag2) =>
           +frag1 > +frag2
             ? "Now this I can understand!"
@@ -39,16 +39,17 @@ describe("parse", () => {
   });
 
   it('parses "2 > 1 && 1 > 0"', () => {
-    const cfg = {
-      rules: new Map([
-        [">", gt],
-        ["&&", andOp],
-      ]),
-    };
+    const rules = new Map();
+    rules.set(">", gt);
+    rules.set("&&", andOp);
+    const cfg = { rules };
     expect(parse(cfg, allTrue)("2 > 1 && 1 > 0")).toEqual(true);
   });
 
   it('parses "3 0 |0 1"', () => {
+    const rules = new Map();
+    rules.set("|", /** @param {string} frag1 @param {string} frag2 @returns {string} */(frag1, frag2) => +frag1 ^ +frag2 ? ">" : "<");
+    rules.set("<", lt);
     const cfg = {
       modifiers: new Map([
         [/\d+\s?\|\s?\d+/, /** @param {string} str @param {string} fullStr @param {Cfg} cfg */(str, fullStr, cfg) => {
@@ -56,10 +57,7 @@ describe("parse", () => {
           return fullStr.replace(str, `${result}`);
         }],
       ]),
-      rules: new Map([
-        ["|", /** @param {string} frag1 @param {string} frag2 */(frag1, frag2) => +frag1 ^ +frag2 ? ">" : "<"],
-        ["<", lt],
-      ]),
+      rules,
     };
     expect(parse(cfg, resolver)("3 0 |0 1")).toEqual(false);
   });
@@ -110,16 +108,16 @@ describe("parse", () => {
   });
 
   it('parses "3 + 1 = (7 - 11) * -1"', () => {
+    const rules = new Map();
+    rules.set("*", multiply);
+    rules.set("+", add);
+    rules.set(/-(?!(\.|[0-9]))/, subtract);
+    rules.set("=", equal);
     const cfg = {
       modifiers: new Map([
         [/\(([^(^)])+\)/, processStrInsideParens],
       ]),
-      rules: new Map([
-        ["*", multiply],
-        ["+", add],
-        [/-(?!(\.|[0-9]))/, subtract],
-        ["=", equal],
-      ]),
+      rules,
     };
     expect(parse(cfg, resolver)("3 + 1 = (7 - 11) * -1")).toEqual(true);
   });
