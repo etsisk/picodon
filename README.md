@@ -104,7 +104,7 @@ parser('(2 + 5) * 3'); // 21
 ```
 Let's walk through how we got this result.
 
-1. The modifincation phase is initiated
+1. The modification phase is initiated
 2. The modifier finds the match `'(2 + 5)'`
 3. The corresponding modifier function is invoked with the matching string, the string to be parsed, and the config
 4. The function strips off the parens and invokes the parser with `'2 + 5'`
@@ -147,4 +147,4 @@ parser('2 + 5 * 3'); // [{ result: 17, ... }]
 
 #### Custom resolvers
 
-The resolver function that comes with str-parse is pretty basic and likely won't cover all of your needs. That said, you can create your own! I recommend checking out the test file for ideas.
+The resolver function that comes with str-parse is very basic and may not cover all of your needs. Check out the test file which contains a couple custom resolvers that you can use or reference when writing your own resolvers.
