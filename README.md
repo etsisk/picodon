@@ -26,7 +26,7 @@ parser('1 < 4'); // true
 -->
 ## Documentation
 
-str-parse exports the `parse` and `resolver` functions. The `parse` function accepts two arguments: a config object and optionally, a resolver function, and returns a configured parser that can be invoked with string values.
+The _str-parse_ library exposes a `parse` and `resolver` function. The `parse` function accepts two arguments: a config object and optionally, a resolver function, and returns a configured parser that can be invoked with string values.
 
 At a high level, a configured parser has the following flow:
 
