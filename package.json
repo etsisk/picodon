@@ -4,8 +4,9 @@
   "description": "A lightweight JavaScript string parsing library",
   "type": "module",
   "scripts": {
+    "coverage": "vitest run --coverage",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "types": "tsc"
   },
   "repository": {
     "type": "git",
@@ -16,7 +17,7 @@
   "license": "MIT",
   "types": "index.d.ts",
   "files": [
-    "src",
+    "src/index.js",
     "index.d.ts"
   ],
   "devDependencies": {

@@ -16,10 +16,15 @@ interface ProcessedChunk {
   result: unknown,
 }
 
+declare function getResultFromOnlyChunk(chunks: Chunk[]): ProcessedChunk[] | string | unknown;
+
+export function parse(cfg: Cfg, resolver?: ((chunks: Chunk[]) => unknown) | undefined): (str: string) => ProcessedChunk[] | unknown;
+
 export {
   Cfg,
   Chunk,
   Lexer,
   Parser,
   ProcessedChunk,
+  getResultFromOnlyChunk as resolver,
 }
