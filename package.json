@@ -1,5 +1,5 @@
 {
-  "name": "str-parse",
+  "name": "picodon",
   "version": "1.0.0",
   "description": "A lightweight JavaScript string parsing library",
   "main": "./src/index.js",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/etsisk/str-parse.git"
+    "url": "https://github.com/etsisk/picodon.git"
   },
   "keywords": [],
   "author": "Eamon Sisk",

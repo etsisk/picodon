@@ -1,10 +1,10 @@
-# str-parse
+# picodon
 
 A lightweight, domain-agnostic string parsing library.
 
 ## Usage
 ```javascript
-import { parse, resolver } from 'str-parse';
+import { parse, resolver } from 'picodon';
 
 const config = {
   rules: new Map([
@@ -21,12 +21,12 @@ parser('1 < 4'); // true
 ## Installation
 
 ```sh
-% npm install str-parse --save
+% npm install picodon --save
 ```
 -->
 ## Documentation
 
-The _str-parse_ library exposes a `parse` and `resolver` function. The `parse` function accepts two arguments: a config object and optionally, a resolver function, and returns a configured parser that can be invoked with string values.
+The _picodon_ library exposes a `parse` and `resolver` function. The `parse` function accepts two arguments: a config object and optionally, a resolver function, and returns a configured parser that can be invoked with string values.
 
 At a high level, a configured parser has the following flow:
 
@@ -48,7 +48,7 @@ When a token is found for a given rule, the corresponding function is invoked, p
 For example, `configA` and `configB` contain the same rules but in a different order. Using the same string, the parser produces two different results:
 
 ```javascript
-import { parse, resolver } from 'str-parse';
+import { parse, resolver } from 'picodon';
 
 const configA = {
   rules: new Map([
@@ -77,7 +77,7 @@ You can think of the modification phase as a way to simplify, or prepare, your s
 In the following example, let's add a modifier to identify matching parentheses. Here we're leveraging the rules we defined in our config to modify the string:
 
 ```javascript
-import { parse, resolver } from 'str-parse';
+import { parse, resolver } from 'picodon';
 
 // RegExp matching innermost parenthesis pair
 const matchingParens = /\(([^(^)])+\)/;
@@ -131,7 +131,7 @@ If no resolver is provided, the resulting parser function will simply return the
 The following example illustrates what gets returned by the parser when no resolver is provided:
 
 ```javascript
-import { parse } from 'str-parse';
+import { parse } from 'picodon';
 
 const config = {
   rules: new Map([
@@ -147,4 +147,4 @@ parser('2 + 5 * 3'); // [{ result: 17, ... }]
 
 #### Custom resolvers
 
-The resolver function that comes with str-parse is very basic and may not cover all of your needs. Check out the test file which contains a couple custom resolvers that you can use or reference when writing your own resolvers.
+The resolver function that comes with picodon is very basic and may not cover all of your needs. Check out the test file which contains a couple custom resolvers that you can use or reference when writing your own resolvers.
