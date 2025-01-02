@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+
+_released `2024-12-23`_
+
+- 🔒 Address CVE-2024-21538
+  
 ## 1.0.2
 
 _released `2024-09-26`_
