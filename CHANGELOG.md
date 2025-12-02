@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.9
+
+_released `2025-12-02`_
+
+- 🔒 Adress CVE-2025-64756
+
 ## 1.0.8
 
 _released `2025-10-22`_
