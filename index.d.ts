@@ -5,20 +5,25 @@ interface Cfg {
 
 type Chunk = ProcessedChunk | string;
 type Lexer = RegExp | string;
-type Parser = (...args: never) => unknown;
+type Parser = (...args: unknown[]) => unknown;
 
 interface ProcessedChunk {
   chunks: {
-    [key: number]: Chunk | Lexer,
-  },
-  fn: Parser,
-  lexer: Lexer,
-  result: unknown,
+    [key: number]: Chunk | Lexer;
+  };
+  fn: Parser;
+  lexer: Lexer;
+  result: unknown;
 }
 
-declare function getResultFromOnlyChunk(chunks: Chunk[]): ProcessedChunk[] | string | unknown;
+declare function getResultFromOnlyChunk(
+  chunks: Chunk[],
+): ProcessedChunk[] | string | unknown;
 
-export function parse(cfg: Cfg, resolver?: ((chunks: Chunk[]) => unknown) | undefined): (str: string) => ProcessedChunk[] | unknown;
+export function parse(
+  cfg: Cfg,
+  resolver?: ((chunks: Chunk[]) => unknown) | undefined,
+): (str: string) => ProcessedChunk[] | unknown;
 
 export {
   Cfg,
@@ -27,4 +32,4 @@ export {
   Parser,
   ProcessedChunk,
   getResultFromOnlyChunk as resolver,
-}
+};

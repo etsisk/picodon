@@ -6,9 +6,10 @@
     "emitDeclarationOnly": true,
     "noImplicitAny": true,
     "outDir": "dist",
+    "rootDir": "./src",
     "strict": true,
     "strictNullChecks": true,
-    "target": "es2022"
+    "target": "es2022",
   },
-  "files": ["src/index.js"]
+  "files": ["src/index.js"],
 }

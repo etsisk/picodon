@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0
+
+_released `2026-04-28`_
+
+- Upgrade to TypeScript 6
+- Improve JSDoc types
+- 🔒 Adress CVE-2026-39364
+
 ## 1.0.10
 
 _released `2026-03-19`_

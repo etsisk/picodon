@@ -12,8 +12,8 @@
  * @returns {(str: string) => ProcessedChunk[] | unknown}
  */
 function parse(cfg, resolver = (n) => n) {
-  const modifiers = [...cfg.modifiers?.keys() ?? []];
-  const lexers = [...cfg.rules?.keys() ?? []];
+  const modifiers = [...(cfg.modifiers?.keys() ?? [])];
+  const lexers = [...(cfg.rules?.keys() ?? [])];
 
   return function process(str) {
     // QUESTION: Do we want to restrict modifiers to be RegExp[] ?
@@ -32,7 +32,7 @@ function parse(cfg, resolver = (n) => n) {
     const chunked = chunkStr(lexers, str);
     const chunks = processChunked(chunked, cfg.rules.entries());
     return resolver(chunks);
-  }
+  };
 }
 
 /**
@@ -41,19 +41,23 @@ function parse(cfg, resolver = (n) => n) {
  * @returns {string[]}
  */
 function chunkStr(lexers, str) {
-  const keys = lexers.map((k) => {
-    if (typeof k === 'string') {
-      return escapeRegExp(k);
-    }
-    return k.source;
-  }).join('|');
+  const keys = lexers
+    .map((k) => {
+      if (typeof k === 'string') {
+        return escapeRegExp(k);
+      }
+      return k.source;
+    })
+    .join('|');
   const regex = new RegExp(`(${keys})`, 'g');
-  return str?.split(regex)?.flatMap((chunk) => {
-    if (chunk === undefined) {
-      return [];
-    }
-    return chunk.trim();
-  }) ?? [];
+  return (
+    str?.split(regex)?.flatMap((chunk) => {
+      if (chunk === undefined) {
+        return [];
+      }
+      return chunk.trim();
+    }) ?? []
+  );
 }
 
 /**
@@ -61,7 +65,7 @@ function chunkStr(lexers, str) {
  * @returns {string}
  */
 function escapeRegExp(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
@@ -83,37 +87,58 @@ function processChunked(chunked, rulesIter) {
   const lexer = nextRule.value[0];
   /** @type {Parser} */
   const fn = nextRule.value[1];
-  const { indicesToPrune, unPrunedChunks } = chunked.reduce((result, chunk, i) => {
-    // CONSIDER: Check if type of chunk is ProcessedChunk
-    if ((typeof lexer === 'string' && chunk === lexer) || (typeof lexer !== 'string' && typeof chunk === 'string' && chunk.match(lexer))) {
-      const siblingChunks = getSiblingChunks(chunked, i);
-      return {
-        indicesToPrune: { ...result.indicesToPrune, [i - 1]: true, [i + 1]: true },
-        // NOTE: https://github.com/microsoft/TypeScript/issues/10479
-        unPrunedChunks: result.unPrunedChunks.concat([{
-          chunks: {
-            ...Object.fromEntries(siblingChunks),
-            [i]: lexer,
+  /** @type {{ unPrunedChunks: Chunk[], indicesToPrune: {[key: string]: boolean} }} */
+  const initialResult = {
+    unPrunedChunks: [],
+    indicesToPrune: {},
+  };
+  const { indicesToPrune, unPrunedChunks } = chunked.reduce(
+    (result, chunk, i) => {
+      // CONSIDER: Check if type of chunk is ProcessedChunk
+      if (
+        (typeof lexer === 'string' && chunk === lexer) ||
+        (typeof lexer !== 'string' &&
+          typeof chunk === 'string' &&
+          chunk.match(lexer))
+      ) {
+        const siblingChunks = getSiblingChunks(chunked, i);
+        return {
+          indicesToPrune: {
+            ...result.indicesToPrune,
+            [i - 1]: true,
+            [i + 1]: true,
           },
-          fn,
-          lexer,
-          result: fn?.apply(
-            null,
-            // CONSIDER: Include lexer as a third argument
-            Array.from(siblingChunks.values()).map((chunk) => getParam(chunk)),
-          ),
-        }]),
+          // NOTE: https://github.com/microsoft/TypeScript/issues/10479
+          unPrunedChunks: result.unPrunedChunks.concat([
+            {
+              chunks: {
+                ...Object.fromEntries(siblingChunks),
+                [i]: lexer,
+              },
+              fn,
+              lexer,
+              result: fn?.apply(
+                null,
+                // CONSIDER: Include lexer as a third argument
+                Array.from(siblingChunks.values()).map((chunk) =>
+                  getParam(chunk),
+                ),
+              ),
+            },
+          ]),
+        };
       }
-    }
-    return {
-      indicesToPrune: result.indicesToPrune,
-      // NOTE: https://github.com/microsoft/TypeScript/issues/10479
-      unPrunedChunks: result.unPrunedChunks.concat([chunk]),
-    };
-  }, { unPrunedChunks: [], indicesToPrune: {} });
+      return {
+        indicesToPrune: result.indicesToPrune,
+        // NOTE: https://github.com/microsoft/TypeScript/issues/10479
+        unPrunedChunks: result.unPrunedChunks.concat([chunk]),
+      };
+    },
+    initialResult,
+  );
 
   const prunedChunks = pruneChunks(unPrunedChunks, indicesToPrune);
-  return processChunked(prunedChunks,  rulesIter);
+  return processChunked(prunedChunks, rulesIter);
 }
 
 /**
@@ -122,12 +147,14 @@ function processChunked(chunked, rulesIter) {
  * @returns {Chunk[]}
  */
 function pruneChunks(chunks, indices) {
-  const pruneableIndices = Object.keys(indices).map((i) => parseInt(i)).flatMap(i => {
-    if (i >= 0 && i < chunks.length) {
-      return [i];
-    }
-    return [];
-  });
+  const pruneableIndices = Object.keys(indices)
+    .map((i) => parseInt(i))
+    .flatMap((i) => {
+      if (i >= 0 && i < chunks.length) {
+        return [i];
+      }
+      return [];
+    });
 
   return chunks.filter((chunk, i) => {
     if (pruneableIndices.includes(i)) {
@@ -174,7 +201,7 @@ function getParam(chunk) {
  * @returns {chunk is ProcessedChunk}
  */
 function isProcessedChunk(chunk) {
-  return typeof chunk === "object" && Object.hasOwn(chunk, "result");
+  return typeof chunk === 'object' && Object.hasOwn(chunk, 'result');
 }
 
 /**
@@ -190,4 +217,3 @@ function getResultFromOnlyChunk(chunks) {
 
 // CONSIDER: Export common regular expressions (e.g. matching parens) as helpers
 export { getResultFromOnlyChunk as resolver, parse };
-
