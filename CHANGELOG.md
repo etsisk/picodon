@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1
+
+_released `2026-07-01`_
+
+- 🔒 Adress CVE-2026-53571
+- 🔒 Adress CVE-2026-53632
+
 ## 1.1.0
 
 _released `2026-04-28`_
