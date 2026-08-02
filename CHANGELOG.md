@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.2
+
+_released `2026-08-02`_
+
+- 🔒 Adress PostCSS Path traversal
+
 ## 1.1.1
 
 _released `2026-07-01`_

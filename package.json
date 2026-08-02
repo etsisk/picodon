@@ -22,9 +22,9 @@
     "index.d.ts"
   ],
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.0",
-    "prettier": "^3.8.1",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.0"
+    "@vitest/coverage-v8": "^4.1.10",
+    "prettier": "^3.9.6",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   }
 }
